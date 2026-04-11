@@ -16,6 +16,11 @@ export const getBrandList = () => {
     return request.get<any, Brand[]>('/admin/brand')
 }
 
+// 获取品牌详情
+export const getBrandById = (brandId: string) => {
+    return request.get<any, Brand>(`/admin/brand/${brandId}`)
+}
+
 // 新增品牌
 export const addBrand = (data: { brandName: string; brandLogo?: string; description?: string; sort?: number; status?: number }) => {
     return request.post('/admin/brand', data)

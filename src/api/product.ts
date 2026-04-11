@@ -22,6 +22,11 @@ export const getProductList = () => {
     return request.get<any, Product[]>('/admin/product')
 }
 
+// 获取商品详情
+export const getProductById = (productId: string) => {
+    return request.get<any, Product>(`/admin/product/${productId}`)
+}
+
 // 新增商品
 export const addProduct = (data: any) => {
     return request.post('/admin/product', data)

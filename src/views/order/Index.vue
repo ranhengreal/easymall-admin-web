@@ -33,17 +33,78 @@
         </el-table-column>
       </el-table>
     </el-card>
+
+    <!-- 订单详情对话框 -->
+    <el-dialog :title="`订单详情 - ${detailData.orderSn}`" v-model="detailVisible" width="700px">
+      <div class="order-detail">
+        <!-- 基本信息 -->
+        <el-descriptions title="基本信息" :column="2" border>
+          <el-descriptions-item label="订单编号">{{ detailData.orderSn }}</el-descriptions-item>
+          <el-descriptions-item label="订单状态">
+            <el-tag :type="getStatusType(detailData.orderStatus)">
+              {{ getStatusText(detailData.orderStatus) }}
+            </el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="下单时间">{{ detailData.createTime }}</el-descriptions-item>
+          <el-descriptions-item label="支付状态">
+            {{ detailData.payStatus === 1 ? '已支付' : '未支付' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="订单金额">¥{{ detailData.totalAmount }}</el-descriptions-item>
+          <el-descriptions-item label="实付金额">¥{{ detailData.payAmount }}</el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 收货信息 -->
+        <el-descriptions title="收货信息" :column="1" border style="margin-top: 20px">
+          <el-descriptions-item label="收货人">{{ detailData.receiverName }}</el-descriptions-item>
+          <el-descriptions-item label="联系电话">{{ detailData.receiverPhone }}</el-descriptions-item>
+          <el-descriptions-item label="收货地址">{{ detailData.receiverAddress }}</el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 商品列表 -->
+        <el-descriptions title="商品信息" border style="margin-top: 20px">
+          <el-table :data="detailData.items" border>
+            <el-table-column prop="productId" label="商品ID" width="100" />
+            <el-table-column prop="productName" label="商品名称" />
+            <el-table-column prop="price" label="单价" width="100">
+              <template #default="{ row }">¥{{ row.price }}</template>
+            </el-table-column>
+            <el-table-column prop="quantity" label="数量" width="80" />
+            <el-table-column prop="totalAmount" label="小计" width="100">
+              <template #default="{ row }">¥{{ row.totalAmount }}</template>
+            </el-table-column>
+          </el-table>
+        </el-descriptions>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getOrderList, updateOrderStatus, deleteOrder } from '@/api/order'
-import type { Order } from '@/api/order'
+import { getOrderList, getOrderDetail, updateOrderStatus, deleteOrder } from '@/api/order'
+import type { Order, OrderDetail } from '@/api/order'
 
+const route = useRoute()
 const loading = ref(false)
 const orderList = ref<Order[]>([])
+const detailVisible = ref(false)
+const detailData = ref<OrderDetail>({
+  orderId: '',
+  orderSn: '',
+  userId: '',
+  userName: '',
+  totalAmount: 0,
+  payAmount: 0,
+  orderStatus: 0,
+  payStatus: 0,
+  receiverName: '',
+  receiverPhone: '',
+  receiverAddress: '',
+  createTime: '',
+  items: []
+})
 
 const getStatusText = (status: number) => {
   const map: Record<number, string> = { 0: '待付款', 1: '待发货', 2: '待收货', 3: '已完成', 4: '已取消', 5: '售后中' }
@@ -59,19 +120,25 @@ const loadData = async () => {
   loading.value = true
   try {
     orderList.value = await getOrderList()
+    // 如果有状态筛选参数
+    const status = route.query.status
+    if (status) {
+      orderList.value = orderList.value.filter(item => item.orderStatus === Number(status))
+    }
   } finally {
     loading.value = false
   }
 }
 
 const handleShip = async (row: Order) => {
-  await updateOrderStatus(row.orderId, 2)  // 待发货 → 待收货
+  await updateOrderStatus(row.orderId, 2)
   ElMessage.success('发货成功')
   await loadData()
 }
 
-const handleDetail = (row: Order) => {
-  ElMessage.info('功能开发中')
+const handleDetail = async (row: Order) => {
+  detailData.value = await getOrderDetail(row.orderId)
+  detailVisible.value = true
 }
 
 const handleDelete = async (row: Order) => {
@@ -95,5 +162,10 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.order-detail {
+  max-height: 500px;
+  overflow-y: auto;
 }
 </style>

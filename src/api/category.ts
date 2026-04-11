@@ -13,6 +13,11 @@ export const getCategoryTree = () => {
   return request.get<any, Category[]>('/admin/category/tree')
 }
 
+// 移动分类（跨层级拖动）
+export const moveCategory = (data: { categoryId: string; targetCategoryId: string; moveType: string }) => {
+  return request.put('/admin/category/move', data)
+}
+
 // 新增分类
 export const addCategory = (data: { categoryName: string; pCategoryId?: string; sort?: number }) => {
   return request.post('/admin/category', data)

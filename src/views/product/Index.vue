@@ -12,9 +12,7 @@
         <el-table-column prop="productId" label="商品ID" width="100" />
         <el-table-column prop="productName" label="商品名称" min-width="200" />
         <el-table-column prop="price" label="价格" width="120">
-          <template #default="{ row }">
-            ¥{{ row.price }}
-          </template>
+          <template #default="{ row }">¥{{ row.price }}</template>
         </el-table-column>
         <el-table-column prop="stock" label="库存" width="100" />
         <el-table-column prop="sales" label="销量" width="100" />
@@ -25,9 +23,12 @@
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'danger'">
-              {{ row.status === 1 ? '上架' : '下架' }}
-            </el-tag>
+            <el-switch
+                v-model="row.status"
+                :active-value="1"
+                :inactive-value="0"
+                @change="(val) => updateStatus(row, val)"
+            />
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
@@ -44,7 +45,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getProductList, deleteProduct, batchUpdateProductSort } from '@/api/product'
+import { getProductList, updateProduct, deleteProduct, batchUpdateProductSort } from '@/api/product'
 import type { Product } from '@/api/product'
 
 const loading = ref(false)
@@ -63,6 +64,11 @@ const updateSort = async (row: Product, sort: number) => {
   await batchUpdateProductSort([{ productId: row.productId, sort }])
   ElMessage.success('排序更新成功')
   await loadData()
+}
+
+const updateStatus = async (row: Product, status: number) => {
+  await updateProduct(row.productId, { status })
+  ElMessage.success(status === 1 ? '商品已上架' : '商品已下架')
 }
 
 const handleAdd = () => {

@@ -15,9 +15,28 @@ export interface Order {
     createTime: string
 }
 
+export interface OrderItem {
+    itemId: string
+    productId: string
+    productName: string
+    productImage: string
+    price: number
+    quantity: number
+    totalAmount: number
+}
+
+export interface OrderDetail extends Order {
+    items: OrderItem[]
+}
+
 // 获取订单列表
 export const getOrderList = () => {
     return request.get<any, Order[]>('/admin/order')
+}
+
+// 获取订单详情
+export const getOrderDetail = (orderId: string) => {
+    return request.get<any, OrderDetail>(`/admin/order/${orderId}`)
 }
 
 // 更新订单状态
