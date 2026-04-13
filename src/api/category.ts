@@ -37,3 +37,4 @@ export const deleteCategory = (categoryId: string) => {
 export const batchUpdateSort = (sortList: { categoryId: string; sort: number }[]) => {
   return request.put('/admin/category/sort/batch', sortList)
 }
+

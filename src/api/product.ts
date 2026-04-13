@@ -8,6 +8,8 @@ export interface Product {
     brandId: string
     brandName: string
     mainImage: string
+    images: string
+    description: string
     price: number
     stock: number
     sales: number
@@ -15,6 +17,15 @@ export interface Product {
     status: number
     createTime: string
     updateTime: string
+    skuList?: Sku[]
+}
+
+export interface Sku {
+    skuId?: string
+    specValues: string
+    price: number
+    stock: number
+    image?: string
 }
 
 // 获取商品列表
