@@ -12,8 +12,17 @@ request.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token')
         if (token) {
-            config.headers.Authorization = `Bearer ${token}`  // ✅ 修复这里
+            config.headers.Authorization = `Bearer ${token}`
         }
+
+        // 为管理员接口添加 role 头
+        if (config.url?.includes('/admin/')) {
+            config.headers.role = 'admin'
+        }
+
+        console.log('请求URL:', config.url)
+        console.log('请求头:', config.headers)
+
         return config
     },
     (error) => {
@@ -25,6 +34,8 @@ request.interceptors.request.use(
 request.interceptors.response.use(
     (response) => {
         const res = response.data
+        console.log('响应数据:', res)
+
         if (res.code === 200) {
             return res.data
         } else if (res.code === 401) {
@@ -38,6 +49,7 @@ request.interceptors.response.use(
         }
     },
     (error) => {
+        console.error('请求错误:', error)
         ElMessage.error(error.message || '网络错误')
         return Promise.reject(error)
     }
