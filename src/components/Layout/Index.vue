@@ -1,14 +1,14 @@
 ﻿<template>
   <el-container class="layout-container">
-    <el-aside width="220px" class="aside">
+    <el-aside :width="sidebarWidth" class="aside">
       <Sidebar />
     </el-aside>
-    
+
     <el-container>
       <el-header class="header">
         <Header />
       </el-header>
-      
+
       <el-main class="main">
         <router-view />
       </el-main>
@@ -17,8 +17,25 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import Sidebar from './Sidebar.vue'
 import Header from './Header.vue'
+
+const isCollapsed = ref(false)
+const sidebarWidth = ref('220px')
+
+const handleSidebarToggle = (event: CustomEvent) => {
+  isCollapsed.value = event.detail.collapsed
+  sidebarWidth.value = isCollapsed.value ? '64px' : '220px'
+}
+
+onMounted(() => {
+  window.addEventListener('sidebar-toggle', handleSidebarToggle as EventListener)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('sidebar-toggle', handleSidebarToggle as EventListener)
+})
 </script>
 
 <style scoped>
@@ -28,6 +45,8 @@ import Header from './Header.vue'
 
 .aside {
   background-color: #304156;
+  transition: width 0.3s ease;
+  overflow-x: hidden;
 }
 
 .header {
@@ -42,5 +61,6 @@ import Header from './Header.vue'
 .main {
   background-color: #f0f2f6;
   padding: 20px;
+  overflow-y: auto;
 }
 </style>
