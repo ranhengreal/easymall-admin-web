@@ -27,12 +27,12 @@
         <el-table-column prop="brandName" label="品牌名称" />
         <el-table-column label="品牌Logo" width="100" align="center">
           <template #default="{ row }">
-            <el-image
+            <img
                 v-if="row.brandLogo"
                 :src="getImageUrl(row.brandLogo)"
-                :preview-src-list="[getImageUrl(row.brandLogo)]"
-                fit="cover"
-                style="width: 50px; height: 50px; border-radius: 8px;"
+                style="width: 50px; height: 50px; border-radius: 8px; cursor: pointer; object-fit: cover; background: #f5f7fa;"
+                @error="handleImageError"
+                @click="() => previewImage(row.brandLogo)"
             />
             <span v-else class="no-logo">无</span>
           </template>
@@ -145,6 +145,8 @@ import { Plus, Rank } from '@element-plus/icons-vue'
 import Sortable from 'sortablejs'
 import { getBrandList, addBrand, updateBrand, deleteBrand, getBrandById, batchUpdateBrandSort } from '@/api/brand'
 import type { Brand } from '@/api/brand'
+import { getImageUrl, handleImageError, previewImage } from '@/utils/image'
+
 
 // 数据
 const loading = ref(false)
@@ -186,13 +188,6 @@ const rules = {
   sort: [
     { type: 'number', min: 0, max: 999, message: '排序值范围 0-999', trigger: 'blur' }
   ]
-}
-
-// 获取图片完整URL
-const getImageUrl = (url: string) => {
-  if (!url) return ''
-  if (url.startsWith('http')) return url
-  return `http://localhost:6061/api${url}`
 }
 
 // 初始化拖拽排序

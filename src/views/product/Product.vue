@@ -53,7 +53,20 @@
         </el-form>
       </div>
 
+      <!-- 商品表格 -->
       <el-table :data="displayList" border v-loading="loading" stripe>
+        <!-- 商品图片列 - 使用原生 img 标签 -->
+        <el-table-column label="商品图片" width="80" align="center">
+          <template #default="{ row }">
+            <img
+                :src="getImageUrl(row.mainImage)"
+                style="width: 50px; height: 50px; border-radius: 4px; cursor: pointer; object-fit: cover; background: #f5f7fa;"
+                @error="handleImageError"
+                @click="() => previewImage(row.mainImage)"
+            />
+          </template>
+        </el-table-column>
+
         <el-table-column prop="productId" label="商品ID" width="100" />
         <el-table-column prop="productName" label="商品名称" min-width="200" />
         <el-table-column label="分类" width="120">
@@ -175,7 +188,7 @@
           <el-input type="textarea" v-model="formData.description" :rows="4" placeholder="请输入商品描述" maxlength="500" show-word-limit />
         </el-form-item>
 
-        <!-- SKU规格 - 卡片布局 -->
+        <!-- SKU规格 -->
         <el-form-item label="SKU规格">
           <div class="sku-header">
             <el-button type="primary" size="small" @click="addSku">添加规格</el-button>
@@ -237,10 +250,11 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
-import { getProductList, addProduct, updateProduct, deleteProduct, getProductById } from '@/api/product'
+import { Plus, Picture } from '@element-plus/icons-vue'
+import { getProductList, addProduct, updateProduct, updateProductStatus, deleteProduct, getProductById } from '@/api/product'
 import { getCategoryTree } from '@/api/category'
 import { getBrandList } from '@/api/brand'
+import { getImageUrl, handleImageError, previewImage } from '@/utils/image'
 import type { Product, Sku } from '@/api/product'
 import type { Category } from '@/api/category'
 import type { Brand } from '@/api/brand'
@@ -317,13 +331,6 @@ const displayList = computed(() => {
 const getCategoryName = (categoryId: string) => {
   const category = categoryOptions.value.find(c => c.categoryId === categoryId)
   return category?.categoryName || '-'
-}
-
-// 获取图片完整URL
-const getImageUrl = (url: string) => {
-  if (!url) return ''
-  if (url.startsWith('http')) return url
-  return `http://localhost:6061/api${url}`
 }
 
 // 上传前校验
@@ -445,13 +452,15 @@ const resetSearch = () => {
   loadData()
 }
 
-// 更新状态
+// 更新状态（使用专门的接口）
 const updateStatus = async (row: Product, status: number) => {
   try {
-    await updateProduct(row.productId, { status })
+    await updateProductStatus(row.productId, status)
     ElMessage.success(status === 1 ? '商品已上架' : '商品已下架')
   } catch (error) {
+    console.error('状态更新失败:', error)
     ElMessage.error('状态更新失败')
+    // 恢复状态
     row.status = row.status === 1 ? 0 : 1
   }
 }
@@ -632,7 +641,7 @@ onMounted(() => {
   margin-top: 4px;
 }
 
-/* ========== SKU 卡片布局样式 ========== */
+/* SKU 卡片布局样式 */
 .sku-header {
   margin-bottom: 12px;
   display: flex;
@@ -685,7 +694,6 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-/* 输入框样式 */
 .sku-list :deep(.el-input-number) {
   width: 100%;
 }
@@ -694,7 +702,7 @@ onMounted(() => {
   text-align: left;
 }
 
-/* 响应式：窗口较小时换行 */
+/* 响应式 */
 @media (max-width: 768px) {
   .sku-item {
     flex-wrap: wrap;
@@ -728,7 +736,6 @@ onMounted(() => {
   margin-top: 10px;
 }
 
-/* 对话框样式 */
 :deep(.el-dialog__body) {
   padding: 20px 30px;
   max-height: 70vh;
