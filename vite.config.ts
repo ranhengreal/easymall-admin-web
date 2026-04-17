@@ -15,6 +15,11 @@ export default defineConfig({
         target: 'http://localhost:6061',
         changeOrigin: true,
         rewrite: (path) => path
+      },
+      // 添加 admin 代理
+      '/admin': {
+        target: 'http://localhost:6061',
+        changeOrigin: true
       }
     }
   }

@@ -55,7 +55,6 @@
 
       <!-- 商品表格 -->
       <el-table :data="displayList" border v-loading="loading" stripe>
-        <!-- 商品图片列 - 使用原生 img 标签 -->
         <el-table-column label="商品图片" width="80" align="center">
           <template #default="{ row }">
             <img
@@ -250,7 +249,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Picture } from '@element-plus/icons-vue'
+import { Plus } from '@element-plus/icons-vue'
 import { getProductList, addProduct, updateProduct, updateProductStatus, deleteProduct, getProductById } from '@/api/product'
 import { getCategoryTree } from '@/api/category'
 import { getBrandList } from '@/api/brand'
@@ -411,21 +410,58 @@ const loadBrands = async () => {
   }
 }
 
+// 递归获取所有子分类ID（包含自身）
+const getAllChildCategoryIds = (list: Category[], parentId: string): string[] => {
+  const findCategory = (cats: Category[], id: string): Category | null => {
+    for (const cat of cats) {
+      if (cat.categoryId === id) return cat
+      if (cat.children && cat.children.length) {
+        const found = findCategory(cat.children, id)
+        if (found) return found
+      }
+    }
+    return null
+  }
+
+  const collectAllChildIds = (category: Category): string[] => {
+    let ids = [category.categoryId]
+    if (category.children && category.children.length) {
+      for (const child of category.children) {
+        ids = ids.concat(collectAllChildIds(child))
+      }
+    }
+    return ids
+  }
+
+  const target = findCategory(list, parentId)
+  if (!target) return [parentId]
+
+  return collectAllChildIds(target)
+}
+
 // 加载商品列表
 const loadData = async () => {
   loading.value = true
   try {
     const data = await getProductList()
     let filtered = data || []
+
+    // 商品名称搜索
     if (searchForm.value.productName) {
       filtered = filtered.filter(p => p.productName.includes(searchForm.value.productName))
     }
+
+    // 分类筛选（包含子分类）
     if (searchForm.value.categoryId) {
-      filtered = filtered.filter(p => p.categoryId === searchForm.value.categoryId)
+      const childIds = getAllChildCategoryIds(categoryTree.value, searchForm.value.categoryId)
+      filtered = filtered.filter(p => childIds.includes(p.categoryId))
     }
+
+    // 状态筛选
     if (searchForm.value.status !== null) {
       filtered = filtered.filter(p => p.status === searchForm.value.status)
     }
+
     productList.value = filtered
     total.value = filtered.length
     pageParams.value.pageNum = 1
@@ -452,7 +488,7 @@ const resetSearch = () => {
   loadData()
 }
 
-// 更新状态（使用专门的接口）
+// 更新状态
 const updateStatus = async (row: Product, status: number) => {
   try {
     await updateProductStatus(row.productId, status)
@@ -460,7 +496,6 @@ const updateStatus = async (row: Product, status: number) => {
   } catch (error) {
     console.error('状态更新失败:', error)
     ElMessage.error('状态更新失败')
-    // 恢复状态
     row.status = row.status === 1 ? 0 : 1
   }
 }
@@ -641,7 +676,6 @@ onMounted(() => {
   margin-top: 4px;
 }
 
-/* SKU 卡片布局样式 */
 .sku-header {
   margin-bottom: 12px;
   display: flex;
@@ -702,7 +736,6 @@ onMounted(() => {
   text-align: left;
 }
 
-/* 响应式 */
 @media (max-width: 768px) {
   .sku-item {
     flex-wrap: wrap;

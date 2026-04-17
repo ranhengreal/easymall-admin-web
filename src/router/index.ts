@@ -52,10 +52,22 @@ const router = createRouter({
           meta: { title: '用户管理' }
         },
         {
+          path: '/banner',
+          name: 'Banner',
+          component: () => import('@/views/banner/Banner.vue'),
+          meta: { title: '轮播图管理', icon: 'Picture' }
+        },
+        {
           path: '/profile',
           name: 'Profile',
           component: () => import('@/views/profile/Profile.vue'),
           meta: { title: '个人中心' }
+        },
+        {
+          path: '/banner',
+          name: 'Banner',
+          component: () => import('@/views/banner/Banner.vue'),
+          meta: { title: '轮播图管理' }
         }
       ]
     }

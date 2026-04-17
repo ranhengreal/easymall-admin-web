@@ -38,6 +38,11 @@
       <span>订单管理</span>
     </el-menu-item>
 
+    <el-menu-item index="/banner">
+      <el-icon><Picture /></el-icon>
+      <span>轮播图管理</span>
+    </el-menu-item>
+
     <el-menu-item index="/user">
       <el-icon><User /></el-icon>
       <span>用户管理</span>
@@ -48,7 +53,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { HomeFilled, Folder, ShoppingCart, Goods, Document, User } from '@element-plus/icons-vue'
+import { HomeFilled, Folder, ShoppingCart, Goods, Document, User, Picture } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const activeMenu = computed(() => route.path)
